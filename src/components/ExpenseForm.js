@@ -12,7 +12,8 @@ export default class ExpenseForm extends React.Component {
         note: '',
         amount: '',
         createdAt: moment(),
-        calenderfocused: false
+        calenderfocused: false,
+        error: ''
     }
     onDescriptionChange = (e) => {
         const description = e.target.value
@@ -24,20 +25,42 @@ export default class ExpenseForm extends React.Component {
     }
     onAmountChange = (e) => {
         const amount = e.target.value
-        if (amount.match(/^\d*(\.\d{0,2})?$/)) {
+        if (!amount || amount.match(/^\d{1,}(\.\d{0,2})?$/)) {
             this.setState(() => ({ amount }))
         }
     }
     onDateChange = (createdAt) => {
-        this.setState(() => ({ createdAt }))
+        if (createdAt) {
+            this.setState(() => ({ createdAt }))
+        }
     }
-    onFocusChange = ({focused}) => { 
-        this.setState(() => ({ calenderFocused: focused}))
+    onFocusChange = ({ focused }) => {
+        this.setState(() => ({ calenderFocused: focused }))
+    }
+    onSubmit = (e) => {
+        e.preventDefault()
+
+        if (!this.state.description && !this.state.amount) {
+            this.setState(() => ({ error: 'Please provide expense description and amount' }))
+        } else if (!this.state.amount) {
+            this.setState(() => ({ error: 'Please provide expense amount.' }))
+        } else if (!this.state.description) {
+            this.setState(() => ({ error: 'Please provide expense description.' }))
+        } else {
+            this.setState(() => ({ error: '' }))
+            this.props.onSubmit({
+                description: this.state.description,
+                amount: parseFloat(this.state.amount, 10) * 100,
+                createdAt: this.state.createdAt.valueOf(),
+                note: this.state.note
+            })
+        }
     }
     render() {
         return (
             <div>
-                <form>
+                {this.state.error && <p>{this.state.error}</p>}
+                <form onSubmit={this.onSubmit}>
                     <input
                         type="text"
                         placeholder="Descripton"
@@ -54,8 +77,8 @@ export default class ExpenseForm extends React.Component {
                     <SingleDatePicker
                         date={this.state.createdAt}
                         onDateChange={this.onDateChange}
-                        focused={this.state.calenderFocused} 
-                        onFocusChange={this.onFocusChange} 
+                        focused={this.state.calenderFocused}
+                        onFocusChange={this.onFocusChange}
                         numberOfMonths={1}
                         isOutsideRange={() => false}
                     />
